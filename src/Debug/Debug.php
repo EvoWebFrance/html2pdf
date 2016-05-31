@@ -17,121 +17,141 @@ namespace Spipu\Html2Pdf\Debug;
  */
 class Debug implements DebugInterface
 {
-    /**
-     * @var float
-     */
-    protected $startTime;
+		/**
+		 * @var float
+		 */
+		protected $startTime;
 
-    /**
-     * @var float
-     */
-    protected $lastTime;
+		/**
+		 * @var float
+		 */
+		protected $lastTime;
 
-    /**
-     * @var int
-     */
-    protected $level = 0;
+		/**
+		 * @var int
+		 */
+		protected $level = 0;
 
-    /**
-     * Debug constructor
-     *
-     * @return Debug
-     */
-    public function __construct()
-    {
+		/**
+		 * DebugType
+		 *
+		 * @var string
+		 * @example 'normal' 'ajax'
+		 */
+		public $debugType = 'normal';
 
-    }
+		/**
+		 * DebugContent
+		 *
+		 * @var string
+		 */
+		public $debugContent = '';
 
-    /**
-     * display a debug line
-     *
-     * @param  string $name
-     * @param  string $timeTotal
-     * @param  string $timeStep
-     * @param  string $memoryUsage
-     * @param  string $memoryPeak
-     *
-     * @return void
-     */
-    protected function displayLine($name, $timeTotal, $timeStep, $memoryUsage, $memoryPeak)
-    {
-        $txt =
-            str_pad($name, 30, ' ', STR_PAD_RIGHT).
-            str_pad($timeTotal, 12, ' ', STR_PAD_LEFT).
-            str_pad($timeStep, 12, ' ', STR_PAD_LEFT).
-            str_pad($memoryUsage, 15, ' ', STR_PAD_LEFT).
-            str_pad($memoryPeak, 15, ' ', STR_PAD_LEFT);
+		/**
+		 * Debug constructor
+		 *
+		 * @return Debug
+		 */
+		public function __construct($type='normal')
+		{
+			$this->debugType =  (in_array($type,array('normal','ajax')))?$type:'normal';
+		}
 
-        echo '<pre style="padding:0; margin:0">'.$txt.'</pre>';
-    }
+		/**
+		 * display a debug line
+		 *
+		 * @param  string $name
+		 * @param  string $timeTotal
+		 * @param  string $timeStep
+		 * @param  string $memoryUsage
+		 * @param  string $memoryPeak
+		 *
+		 * @return void
+		 */
+		protected function displayLine($name, $timeTotal, $timeStep, $memoryUsage, $memoryPeak)
+		{
+				$txt =
+						str_pad($name, 30, ' ', STR_PAD_RIGHT).
+						str_pad($timeTotal, 12, ' ', STR_PAD_LEFT).
+						str_pad($timeStep, 12, ' ', STR_PAD_LEFT).
+						str_pad($memoryUsage, 15, ' ', STR_PAD_LEFT).
+						str_pad($memoryPeak, 15, ' ', STR_PAD_LEFT);
 
-    /**
-     * Start the debugger
-     *
-     * @return Debug
-     */
-    public function start()
-    {
-        $time = microtime(true);
+				$txt = '<pre style="padding:0; margin:0">'.$txt.'</pre>';
+				if ($this->debugType == 'ajax') {
+					$this->debugContent .= $txt;
+				} else {
+					echo $txt;
+				}
+		}
 
-        $this->startTime = $time;
-        $this->lastTime = $time;
+		/**
+		 * Start the debugger
+		 *
+		 * @return Debug
+		 */
+		public function start()
+		{
+				$time = microtime(true);
 
-        $this->displayLine('step', 'time', 'delta', 'memory', 'peak');
-        $this->addStep('Init debug');
+				$this->startTime = $time;
+				$this->lastTime = $time;
 
-        return $this;
-    }
+				$this->displayLine('step', 'time', 'delta', 'memory', 'peak');
+				$this->addStep('Init debug');
 
-    /**
-     * stop the debugger
-     *
-     * @return Debug
-     */
-    public function stop()
-    {
-        $this->addStep('Before output');
-        return $this;
-    }
+				return $this;
+		}
 
-    /**
-     * add a debug step
-     *
-     * @param  string  $name step name
-     * @param  boolean $level (true=up, false=down, null=nothing to do)
-     *
-     * @return Debug
-     */
-    public function addStep($name, $level = null)
-    {
-        // if true : UP
-        if ($level===true) {
-            $this->level++;
-        }
+		/**
+		 * stop the debugger
+		 *
+		 * @return Debug
+		 */
+		public function stop()
+		{
+				$this->addStep('Before output');
+				return $this;
+		}
 
-        $time  = microtime(true);
-        $usage = memory_get_usage();
-        $peak  = memory_get_peak_usage();
-        $name  =
-            str_repeat('  ', $this->level).
-            $name.
-            ($level===true ? ' Begin' : ($level===false ? ' End' : ''));
+		/**
+		 * add a debug step
+		 *
+		 * @param  string  $name step name
+		 * @param  boolean $level (true=up, false=down, null=nothing to do)
+		 *
+		 * @return Debug
+		 */
+		public function addStep($name, $level = null)
+		{
+				// if true : UP
+				if ($level===true) {
+						$this->level++;
+				}
 
-        $this->displayLine(
-            $name,
-            number_format(($time - $this->startTime)*1000, 1, '.', ' ').' ms',
-            number_format(($time - $this->lastTime)*1000, 1, '.', ' ').' ms',
-            number_format($usage/1024, 1, '.', ' ').' Ko',
-            number_format($peak/1024, 1, '.', ' ').' Ko'
-        );
+				$time  = microtime(true);
+				$usage = memory_get_usage();
+				$peak  = memory_get_peak_usage();
+				$name  =
+						str_repeat('  ', $this->level).
+						$name.
+						($level===true ? ' Begin' : ($level===false ? ' End' : ''));
 
-        $this->lastTime = $time;
+				$this->displayLine(
+						$name,
+						number_format(($time - $this->startTime)*1000, 1, '.', ' ').' ms',
+						number_format(($time - $this->lastTime)*1000, 1, '.', ' ').' ms',
+						number_format($usage/1024, 1, '.', ' ').' Ko',
+						number_format($peak/1024, 1, '.', ' ').' Ko'
+				);
 
-        // it false : DOWN
-        if ($level===false) {
-            $this->level--;
-        }
+				$this->lastTime = $time;
 
-        return $this;
-    }
+				// it false : DOWN
+				if ($level===false) {
+						$this->level--;
+				}
+
+				return $this;
+		}
 }
